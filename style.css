@@ -1,0 +1,85 @@
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  font-family: "Poppins", sans-serif;
+}
+
+.card, .home-card {
+  width: 350px;
+  padding: 30px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  backdrop-filter: blur(12px);
+  color: white;
+  text-align: center;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin-top: -5px;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.input-group {
+  text-align: left;
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 5px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  font-size: 16px;
+}
+
+.btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  margin-top: 10px;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: rgba(255,255,255,0.4);
+}
+
+.btn.primary {
+  background: #22c55e;
+}
+
+.btn.primary:hover {
+  background: #16a34a;
+}
+
+.recaptcha {
+  margin: 15px 0;
+  transform: scale(0.9);
+  transform-origin: center;
+}
