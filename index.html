@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Premium CSS Styling */
+        :root {
+            --primary-color: #1a73e8; /* Rich Blue */
+            --accent-color: #00c7e5; /* Cyan Accent */
+            --text-color: #333;
+            --light-bg: #f5f8fa;
+            --card-bg: #ffffff;
+            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            /* Gradient Background for Depth */
+            background: linear-gradient(135deg, var(--light-bg) 0%, #e0f7ff 100%);
+            color: var(--text-color);
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 50px;
+            border-radius: 12px;
+            /* Floating Card Effect */
+            box-shadow: var(--shadow-deep);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        h2 {
+            margin-bottom: 30px;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.9em;
+        }
+
+        input[type="tel"], input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            outline: none;
+        }
+
+        input[type="tel"]:focus, input[type="text"]:focus {
+            border-color: var(--primary-color);
+            /* Subtle Focus Glow */
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2); 
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            /* Gradient Button */
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-light);
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 115, 232, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+
+        #otp-form {
+            display: none; /* Hidden by default */
+        }
+
+        #recaptcha-container {
+            margin-top: 25px;
+            /* Ensure reCAPTCHA is centered */
+            display: flex; 
+            justify-content: center;
+        }
+
+        .message {
+            margin-top: 20px;
+            color: var(--primary-color);
+            font-weight: 600;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .error {
+            color: #dc3545; /* Red */
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🔒 Secure Access</h2>
+
+        <div id="phone-form">
+            <label for="phone">Enter Phone Number</label>
+            <input type="tel" id="phone" placeholder="+1234567890" required>
+            <button id="send-otp-btn">Send Verification Code</button>
+        </div>
+
+        <div id="otp-form">
+            <label for="otp">Verification Code (6 Digits)</label>
+            <input type="text" id="otp" placeholder="••••••" maxlength="6" required>
+            <button id="verify-otp-btn">Verify and Login</button>
+        </div>
+
+        <div id="recaptcha-container"></div>
+        
+        <p class="message" id="status-message"></p>
+        <p class="error" id="error-message"></p>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
