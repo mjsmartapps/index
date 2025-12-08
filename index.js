@@ -134,7 +134,8 @@ const elements = {
     updateEmail: document.getElementById('update-email'),
     updatePhone: document.getElementById('update-phone'),
     updateAddress: document.getElementById('update-address'),
-    // Auth elements    loginPhone: document.getElementById('loginPhone'),
+    // Auth elements
+loginPhone: document.getElementById('loginPhone'),
     sendOtpBtn: document.getElementById('send-otp-btn'),
     phoneStep1: document.getElementById('phone-step-1'),
     phoneStep2: document.getElementById('phone-step-2'),
@@ -212,31 +213,13 @@ function setButtonLoading(btn, isLoading) {
     }
 }
 
-// Setup Recaptcha (hidden, invisible) - create hidden container so UI doesn't show reCAPTCHA widget
-(function(){
-    try {
-        if (!document.getElementById('recaptcha-container')) {
-            const d = document.createElement('div');
-            d.id = 'recaptcha-container';
-            d.style.display = 'none';
-            document.body.appendChild(d);
-        }
-        // Use invisible size so it doesn't show in the popup.
-        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-            'size': 'invisible',
-            'callback': (response) => {
-                // reCAPTCHA solved (invisible), allow signInWithPhoneNumber.
-            }
-        });
-        // render once (safe-guard)
-        if (window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function') {
-            try { window.recaptchaVerifier.render(); } catch(e) {}
-        }
-    } catch(e) {
-        console.warn('Recaptcha init failed:', e);
-        window.recaptchaVerifier = null;
+// Setup Recaptcha
+window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+    'size': 'normal',
+    'callback': (response) => {
+        // reCAPTCHA solved, allow signInWithPhoneNumber.
     }
-})();
+});
 
 // Check if user exists in DB, else create basic profile and SYNC email/phone
 async function ensureUserProfile(user) {
@@ -297,12 +280,6 @@ elements.sendOtpBtn.addEventListener('click', async () => {
     const fullPhoneNumber = "+91" + phoneNumber;
     
     const appVerifier = window.recaptchaVerifier;
-    if (!appVerifier) {
-        showToast('Unable to initialize invisible reCAPTCHA. Please try again later.');
-        setButtonLoading(elements.sendOtpBtn, false);
-        hideLoader();
-        return;
-    }
     try {
         showLoader();
         setButtonLoading(elements.sendOtpBtn, true);
@@ -389,7 +366,7 @@ elements.drawerItems.forEach(item => {
                     showToast('Please login to view orders.');
                     elements.loginModal.classList.add('open');
                     // Render Recaptcha only when modal opens to avoid ID issues
-                        if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
+                        if(window.recaptchaVerifier) window.recaptchaVerifier.render();
                     return;
                 }
                 loadOrders();
@@ -397,14 +374,14 @@ elements.drawerItems.forEach(item => {
                     if (!appState.currentUser) {
                     showToast('Please login to submit a query.');
                     elements.loginModal.classList.add('open');
-                    if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
+                    if(window.recaptchaVerifier) window.recaptchaVerifier.render();
                     return;
                 }
             } else if (view === 'profile') {
                 if (!appState.currentUser) {
                     showToast('Please login to view your profile.');
                     elements.loginModal.classList.add('open');
-                    if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
+                    if(window.recaptchaVerifier) window.recaptchaVerifier.render();
                     return;
                 }
                 loadProfile();
@@ -413,7 +390,7 @@ elements.drawerItems.forEach(item => {
                 if (!appState.currentUser) {
                     showToast('Please login to view your cart.');
                     elements.loginModal.classList.add('open');
-                    if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
+                    if(window.recaptchaVerifier) window.recaptchaVerifier.render();
                     return;
                 }
                 // === UPDATE: Load fresh profile data when accessing via drawer ===
@@ -665,7 +642,7 @@ elements.checkoutBtn.addEventListener('click', () => {
         showToast('Please login to checkout.');
         elements.loginModal.classList.add('open');
         elements.cartDrawer.classList.remove('open');
-        if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
+        if(window.recaptchaVerifier) window.recaptchaVerifier.render();
         return;
     }
     switchView('cart-view');
@@ -1397,7 +1374,7 @@ elements.profileMapBtn.addEventListener('click', async () => {
     if (!appState.currentUser) {
         showToast('Please login to change your location.');
         elements.loginModal.classList.add('open');
-        if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
+        if(window.recaptchaVerifier) window.recaptchaVerifier.render();
         return;
     }
     switchView('map-view');
@@ -1408,7 +1385,7 @@ elements.changeLocationBtn.addEventListener('click', async () => {
         if (!appState.currentUser) {
         showToast('Please login to change your location.');
         elements.loginModal.classList.add('open');
-        if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
+        if(window.recaptchaVerifier) window.recaptchaVerifier.render();
         return;
     }
     switchView('map-view');
@@ -1453,7 +1430,7 @@ document.querySelectorAll('.footer-btn').forEach(btn => {
             if (!appState.currentUser) {
                 showToast('Please login to view your cart.');
                 elements.loginModal.classList.add('open');
-                if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
+                if(window.recaptchaVerifier) window.recaptchaVerifier.render();
                 return; // Stop execution, do not switch view
             }
             // === UPDATE: Load fresh profile data when accessing via footer ===
@@ -1463,7 +1440,7 @@ document.querySelectorAll('.footer-btn').forEach(btn => {
             if (!appState.currentUser) {
                 showToast('Please login to view orders.');
                 elements.loginModal.classList.add('open');
-                if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
+                if(window.recaptchaVerifier) window.recaptchaVerifier.render();
                 return;
             }
             loadOrders();
@@ -1471,7 +1448,7 @@ document.querySelectorAll('.footer-btn').forEach(btn => {
             if (!appState.currentUser) {
                 showToast('Please login to view your profile.');
                 elements.loginModal.classList.add('open');
-                if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
+                if(window.recaptchaVerifier) window.recaptchaVerifier.render();
                 return;
             }
             loadProfile();
