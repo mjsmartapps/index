@@ -13,28 +13,6 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-// ---- Redirect-based Google Sign-in handling (added) ----
-async function initGoogleRedirectFlow(){
-    try{
-        showLoader();
-        const result = await auth.getRedirectResult();
-        if (result && result.user) {
-            // Signed in via redirect
-            elements.loginModal.classList.remove('open');
-            showToast('Signed in with Google!');
-        }
-    } catch(err){
-        console.error('getRedirectResult error:', err);
-        showToast('Google Sign-in error: ' + (err.message || err.code));
-    } finally{ hideLoader(); }
-}
-
-// Call on page load
-initGoogleRedirectFlow();
-
-// --------------------------------------------------------
-
-
 // Helper: get user's current geolocation (resolve even if denied)
 function getCurrentLocation(timeout = 5000) {
     return new Promise((resolve) => {
@@ -156,9 +134,7 @@ const elements = {
     updateEmail: document.getElementById('update-email'),
     updatePhone: document.getElementById('update-phone'),
     updateAddress: document.getElementById('update-address'),
-    // Auth elements
-    googleLoginBtn: document.getElementById('google-login-btn'),
-    loginPhone: document.getElementById('loginPhone'),
+    // Auth elements    loginPhone: document.getElementById('loginPhone'),
     sendOtpBtn: document.getElementById('send-otp-btn'),
     phoneStep1: document.getElementById('phone-step-1'),
     phoneStep2: document.getElementById('phone-step-2'),
@@ -236,13 +212,31 @@ function setButtonLoading(btn, isLoading) {
     }
 }
 
-// Setup Recaptcha
-window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-    'size': 'normal',
-    'callback': (response) => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
+// Setup Recaptcha (hidden, invisible) - create hidden container so UI doesn't show reCAPTCHA widget
+(function(){
+    try {
+        if (!document.getElementById('recaptcha-container')) {
+            const d = document.createElement('div');
+            d.id = 'recaptcha-container';
+            d.style.display = 'none';
+            document.body.appendChild(d);
+        }
+        // Use invisible size so it doesn't show in the popup.
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            'size': 'invisible',
+            'callback': (response) => {
+                // reCAPTCHA solved (invisible), allow signInWithPhoneNumber.
+            }
+        });
+        // render once (safe-guard)
+        if (window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function') {
+            try { window.recaptchaVerifier.render(); } catch(e) {}
+        }
+    } catch(e) {
+        console.warn('Recaptcha init failed:', e);
+        window.recaptchaVerifier = null;
     }
-});
+})();
 
 // Check if user exists in DB, else create basic profile and SYNC email/phone
 async function ensureUserProfile(user) {
@@ -288,23 +282,6 @@ elements.closeLoginModal.addEventListener('click', () => {
     elements.loginModal.classList.remove('open');
 });
 
-// Google Login
-elements.googleLoginBtn.addEventListener('click', async () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-        showLoader();
-        setButtonLoading(elements.googleLoginBtn, true);
-        await auth.signInWithRedirect(provider);
-        elements.loginModal.classList.remove('open');
-        showToast('Signed in with Google!');
-    } catch (error) {
-        showToast('Google Sign-In Error: ' + error.message);
-    } finally {
-        hideLoader();
-        setButtonLoading(elements.googleLoginBtn, false);
-    }
-});
-
 // Phone Login: Send OTP
 elements.sendOtpBtn.addEventListener('click', async () => {
     let phoneNumber = elements.loginPhone.value.trim();
@@ -320,6 +297,12 @@ elements.sendOtpBtn.addEventListener('click', async () => {
     const fullPhoneNumber = "+91" + phoneNumber;
     
     const appVerifier = window.recaptchaVerifier;
+    if (!appVerifier) {
+        showToast('Unable to initialize invisible reCAPTCHA. Please try again later.');
+        setButtonLoading(elements.sendOtpBtn, false);
+        hideLoader();
+        return;
+    }
     try {
         showLoader();
         setButtonLoading(elements.sendOtpBtn, true);
@@ -406,7 +389,7 @@ elements.drawerItems.forEach(item => {
                     showToast('Please login to view orders.');
                     elements.loginModal.classList.add('open');
                     // Render Recaptcha only when modal opens to avoid ID issues
-                        if(window.recaptchaVerifier) window.recaptchaVerifier.render();
+                        if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
                     return;
                 }
                 loadOrders();
@@ -414,14 +397,14 @@ elements.drawerItems.forEach(item => {
                     if (!appState.currentUser) {
                     showToast('Please login to submit a query.');
                     elements.loginModal.classList.add('open');
-                    if(window.recaptchaVerifier) window.recaptchaVerifier.render();
+                    if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
                     return;
                 }
             } else if (view === 'profile') {
                 if (!appState.currentUser) {
                     showToast('Please login to view your profile.');
                     elements.loginModal.classList.add('open');
-                    if(window.recaptchaVerifier) window.recaptchaVerifier.render();
+                    if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
                     return;
                 }
                 loadProfile();
@@ -430,7 +413,7 @@ elements.drawerItems.forEach(item => {
                 if (!appState.currentUser) {
                     showToast('Please login to view your cart.');
                     elements.loginModal.classList.add('open');
-                    if(window.recaptchaVerifier) window.recaptchaVerifier.render();
+                    if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
                     return;
                 }
                 // === UPDATE: Load fresh profile data when accessing via drawer ===
@@ -682,7 +665,7 @@ elements.checkoutBtn.addEventListener('click', () => {
         showToast('Please login to checkout.');
         elements.loginModal.classList.add('open');
         elements.cartDrawer.classList.remove('open');
-        if(window.recaptchaVerifier) window.recaptchaVerifier.render();
+        if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
         return;
     }
     switchView('cart-view');
@@ -1414,7 +1397,7 @@ elements.profileMapBtn.addEventListener('click', async () => {
     if (!appState.currentUser) {
         showToast('Please login to change your location.');
         elements.loginModal.classList.add('open');
-        if(window.recaptchaVerifier) window.recaptchaVerifier.render();
+        if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
         return;
     }
     switchView('map-view');
@@ -1425,7 +1408,7 @@ elements.changeLocationBtn.addEventListener('click', async () => {
         if (!appState.currentUser) {
         showToast('Please login to change your location.');
         elements.loginModal.classList.add('open');
-        if(window.recaptchaVerifier) window.recaptchaVerifier.render();
+        if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
         return;
     }
     switchView('map-view');
@@ -1470,7 +1453,7 @@ document.querySelectorAll('.footer-btn').forEach(btn => {
             if (!appState.currentUser) {
                 showToast('Please login to view your cart.');
                 elements.loginModal.classList.add('open');
-                if(window.recaptchaVerifier) window.recaptchaVerifier.render();
+                if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
                 return; // Stop execution, do not switch view
             }
             // === UPDATE: Load fresh profile data when accessing via footer ===
@@ -1480,7 +1463,7 @@ document.querySelectorAll('.footer-btn').forEach(btn => {
             if (!appState.currentUser) {
                 showToast('Please login to view orders.');
                 elements.loginModal.classList.add('open');
-                if(window.recaptchaVerifier) window.recaptchaVerifier.render();
+                if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
                 return;
             }
             loadOrders();
@@ -1488,7 +1471,7 @@ document.querySelectorAll('.footer-btn').forEach(btn => {
             if (!appState.currentUser) {
                 showToast('Please login to view your profile.');
                 elements.loginModal.classList.add('open');
-                if(window.recaptchaVerifier) window.recaptchaVerifier.render();
+                if(window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function'){ try{ window.recaptchaVerifier.render(); }catch(e){} }
                 return;
             }
             loadProfile();
